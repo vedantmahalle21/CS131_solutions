@@ -89,7 +89,6 @@ def rgb_exclusion(image, channel):
     color = {'r': 0, 'g': 1, 'b': 2}
     image = np.array(image)
     image[..., color[channel.lower()]] = 0
-
     out = image
     ### END YOUR CODE
 
@@ -120,8 +119,9 @@ def lab_decomposition(image, channel):
     else:
         lab[...,0] = 0
         lab[...,1] = 0
-    ### END YOUR CODE
     out = lab
+    ### END YOUR CODE
+    
     return out
 
 
@@ -138,7 +138,7 @@ def hsv_decomposition(image, channel='H'):
 
     hsv = color.rgb2hsv(image)
     out = None
-
+    
     ### YOUR CODE HERE
     if(channel =='H'):
         hsv[...,1] = 0
@@ -149,8 +149,9 @@ def hsv_decomposition(image, channel='H'):
     else:
         hsv[...,0] = 0
         hsv[...,1] = 0
-    ### END YOUR CODE
     out = hsv
+    ### END YOUR CODE
+    
 
     return out
 
