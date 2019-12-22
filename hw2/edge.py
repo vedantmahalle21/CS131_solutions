@@ -36,7 +36,9 @@ def conv(image, kernel):
     padded = np.pad(image, pad_width, mode='edge')
 
     ### YOUR CODE HERE
-    pass
+    for m in range(Hi):
+    	for n in range(Wi):
+    		out[m,n] = np.sum(kernel * padded[m:m+Hk,n:n+Wk])
     ### END YOUR CODE
 
     return out
@@ -61,7 +63,13 @@ def gaussian_kernel(size, sigma):
     kernel = np.zeros((size, size))
 
     ### YOUR CODE HERE
-    pass
+    for i in range(size):
+    	for j in range(size):
+    		exp_1 = np.square(i-((size-1)/2)) + np.square(j-((size-1)/2))
+    		exp_2 = 2*np.square(sigma)
+    		exp_3 = 2*np.pi*sigma
+    		exp_ = np.exp(-exp_1/exp_2)
+    		kernel[i,j] = exp_/exp_3
     ### END YOUR CODE
 
     return kernel
@@ -79,9 +87,10 @@ def partial_x(img):
     """
 
     out = None
-
+    Hi, Wi = img.shape
     ### YOUR CODE HERE
-    pass
+    Dx = np.asarray([[-0.5, 0, 0.5]]).reshape((1, 3))
+    out = conv(img, Dx)
     ### END YOUR CODE
 
     return out
@@ -99,9 +108,10 @@ def partial_y(img):
     """
 
     out = None
-
+    Hi, Wi = img.shape
     ### YOUR CODE HERE
-    pass
+    Dy = np.asarray([[-0.5, 0, 0.5]]).reshape((3, 1))
+    out = conv(img, Dy)
     ### END YOUR CODE
 
     return out
@@ -125,7 +135,10 @@ def gradient(img):
     theta = np.zeros(img.shape)
 
     ### YOUR CODE HERE
-    pass
+    Gx = partial_x(img)
+    Gy = partial_y(img)
+    G = np.sqrt(Gx**2 + Gy**2)
+    theta = (np.rad2deg(np.arctan2(Gy, Gx))+180)%360
     ### END YOUR CODE
 
     return G, theta
@@ -151,7 +164,15 @@ def non_maximum_suppression(G, theta):
     theta = np.floor((theta + 22.5) / 45) * 45
 
     ### BEGIN YOUR CODE
-    pass
+    for m in range(1, H-1):
+    	for n in range(1, W-1):
+    		theta[m,n] = np.deg2rad(theta[m,n])
+    		p1 = G[m - np.int(np.round(np.sin(theta[m,n]))),n - np.int(np.round(np.cos(theta[m,n])))]
+    		p2 = G[m + np.int(np.round(np.sin(theta[m,n]))),n + np.int(np.round(np.cos(theta[m,n])))]
+    		if(G[m,n] >= p1 and G[m,n] >= p2):
+    			out[m,n] = G[m,n]
+    		else:
+    			out[m,n] = 0
     ### END YOUR CODE
 
     return out
@@ -176,7 +197,8 @@ def double_thresholding(img, high, low):
     weak_edges = np.zeros(img.shape, dtype=np.bool)
 
     ### YOUR CODE HERE
-    pass
+    strong_edges = img>high
+    weak_edges = np.logical_and(img > low, img <= high)
     ### END YOUR CODE
 
     return strong_edges, weak_edges
@@ -235,7 +257,16 @@ def link_edges(strong_edges, weak_edges):
     edges = np.copy(strong_edges)
 
     ### YOUR CODE HERE
-    pass
+    for m in range(H):
+    	for n in range(W):
+    		if (weak_edges[m,n] == 1):
+    			ed = get_neighbors(n,m,H,W)
+    			for x,y in ed:
+    				if(edges[x,y] == 1):
+    					edges[m,n] = 1
+    					break
+    				
+
     ### END YOUR CODE
 
     return edges
@@ -253,7 +284,12 @@ def canny(img, kernel_size=5, sigma=1.4, high=20, low=15):
         edge: numpy array of shape(H, W).
     """
     ### YOUR CODE HERE
-    pass
+    kernel = gaussian_kernel(kernel_size, sigma)
+    smoothed = conv(img, kernel)
+    G, theta = gradient(smoothed)
+    nms_img = non_maximum_suppression(G, theta)
+    dth_S_img, dth_W_img = double_thresholding(nms_img, high, low)
+    edge = link_edges(dth_S_img, dth_W_img)
     ### END YOUR CODE
 
     return edge
@@ -293,7 +329,14 @@ def hough_transform(img):
     # Find rho corresponding to values in thetas
     # and increment the accumulator in the corresponding coordiate.
     ### YOUR CODE HERE
-    pass
+    for i in range(len(xs)):
+    	x = xs[i]
+    	y = ys[i]
+
+    	for theta_i in range(num_thetas):
+    		rho = int(round(x * cos_t[theta_i] + y * sin_t[theta_i]) + diag_len)
+    		accumulator[rho, theta_i] += 1
+
     ### END YOUR CODE
 
     return accumulator, rhos, thetas
